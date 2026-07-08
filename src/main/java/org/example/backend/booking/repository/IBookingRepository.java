@@ -25,4 +25,7 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
            "AND b.checkOutDate <= :checkInDate GROUP BY b.room.id")
     List<Object[]> findLastCheckOutDatesForRooms(@Param("roomIds") List<Long> roomIds,
                                                  @Param("checkInDate") LocalDate checkInDate);
+
+    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId ORDER BY b.createdAt DESC")
+    List<Booking> findByUserId(@Param("userId") Long userId);
 }

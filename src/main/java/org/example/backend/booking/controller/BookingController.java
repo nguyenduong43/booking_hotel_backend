@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.booking.dto.BookingRequest;
 import org.example.backend.booking.dto.BookingResponse;
+import org.example.backend.booking.dto.SingleBookingDto;
+import org.example.backend.booking.entity.Booking;
 import org.example.backend.booking.repository.IBookingRepository;
 import org.example.backend.booking.service.IBookingService;
 import org.example.backend.room.entity.Room;
@@ -91,6 +93,31 @@ public class BookingController {
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getBookingHistory(HttpSession session) {
+        UserResponse userSession = (UserResponse) session.getAttribute("user");
+        if (userSession == null) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Quý khách phải đăng nhập để xem lịch sử đặt phòng!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        List<Booking> bookings = bookingRepository.findByUserId(userSession.getId());
+        List<SingleBookingDto> dtos = bookings.stream().map(b -> SingleBookingDto.builder()
+                .id(b.getId())
+                .bookingGroupCode(b.getBookingGroupCode())
+                .roomNumber(b.getRoom().getRoomNumber())
+                .roomTypeName(b.getRoom().getRoomType().getName())
+                .checkInDate(b.getCheckInDate())
+                .checkOutDate(b.getCheckOutDate())
+                .totalPrice(b.getTotalPrice())
+                .status(b.getStatus())
+                .build()
+        ).toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     private Map<String, String> getValidationErrors(BindingResult bindingResult) {

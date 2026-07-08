@@ -21,4 +21,11 @@ public class RoomTypeController {
         List<RoomType> roomTypes = roomTypeRepository.findAll();
         return ResponseEntity.ok(roomTypes);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RoomType> getRoomTypeById(@PathVariable Long id) {
+        return roomTypeRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

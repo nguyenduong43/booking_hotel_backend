@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Builder
 public class SingleBookingDto {
     private Long id;
+    private String bookingGroupCode;
     private String roomNumber;
     private String roomTypeName;
     private LocalDate checkInDate;
