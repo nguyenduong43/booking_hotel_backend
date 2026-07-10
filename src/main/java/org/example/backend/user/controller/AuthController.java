@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend.user.dto.LoginRequest;
 import org.example.backend.user.dto.RegisterRequest;
 import org.example.backend.user.dto.UserResponse;
+import org.example.backend.user.dto.GoogleTokenRequest;
 import org.example.backend.user.service.IUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,22 @@ public class AuthController {
         }
         try {
             UserResponse response = userService.login(request);
+            session.setAttribute("user", response);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> loginWithGoogle(@Valid @RequestBody GoogleTokenRequest request, BindingResult bindingResult, HttpSession session) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(getValidationErrors(bindingResult));
+        }
+        try {
+            UserResponse response = userService.loginWithGoogle(request);
             session.setAttribute("user", response);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
