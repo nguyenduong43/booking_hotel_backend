@@ -15,4 +15,5 @@ public interface IUserService {
     
     UserResponse register(RegisterRequest request);
     UserResponse login(LoginRequest request);
+    UserResponse loginWithGoogle(org.example.backend.user.dto.GoogleTokenRequest request);
 }

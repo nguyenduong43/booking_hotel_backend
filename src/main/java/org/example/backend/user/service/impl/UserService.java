@@ -13,6 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Collections;
+import java.util.UUID;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.example.backend.user.dto.GoogleTokenRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +80,44 @@ public class UserService implements IUserService {
         }
 
         return convertToResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse loginWithGoogle(GoogleTokenRequest request) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList("441238238424-badhdniaj9o7v0b7jifam05kaong9aje.apps.googleusercontent.com"))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(request.getToken());
+            if (idToken == null) {
+                throw new IllegalArgumentException("Token không hợp lệ!");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                // Tạo user mới
+                Role userRole = roleRepository.findByName("ROLE_USER")
+                        .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_USER").build()));
+                
+                user = User.builder()
+                        .email(email)
+                        .password(UUID.randomUUID().toString()) // Mật khẩu ngẫu nhiên cho user Google
+                        .fullName(name)
+                        .role(userRole)
+                        .build();
+                user = userRepository.save(user);
+            }
+
+            return convertToResponse(user);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Đăng nhập Google thất bại: " + e.getMessage());
+        }
     }
 
     private UserResponse convertToResponse(User user) {
