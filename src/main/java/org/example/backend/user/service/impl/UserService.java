@@ -20,10 +20,14 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import org.example.backend.user.dto.GoogleTokenRequest;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements IUserService {
+    @Value("${google.client.id}")
+    private String googleClientId;
+
     private final IUserRepository userRepository;
     private final IRoleRepository roleRepository;
 
@@ -87,7 +91,7 @@ public class UserService implements IUserService {
     public UserResponse loginWithGoogle(GoogleTokenRequest request) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                    .setAudience(Collections.singletonList("441238238424-badhdniaj9o7v0b7jifam05kaong9aje.apps.googleusercontent.com"))
+                    .setAudience(Collections.singletonList(googleClientId))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(request.getToken());
@@ -127,6 +131,7 @@ public class UserService implements IUserService {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .roleName(user.getRole().getName())
+                .image(user.getImage())
                 .build();
     }
 }
