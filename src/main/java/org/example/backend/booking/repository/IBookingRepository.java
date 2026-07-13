@@ -28,4 +28,6 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b FROM Booking b WHERE b.user.id = :userId ORDER BY b.createdAt DESC")
     List<Booking> findByUserId(@Param("userId") Long userId);
+
+    List<Booking> findTop5ByOrderByCreatedAtDesc();
 }
